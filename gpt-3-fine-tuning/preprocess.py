@@ -1,7 +1,6 @@
 """
 # Documentation
 @main: Main function that retrieves the object from the bucket and processes it.
-@convert_to_mp3: Converts an audio file to mp3 format.
 @audio_to_text: Converts an audio file to text using OpenAI's Audio.transcribe method.
 @config: Loads the environment variables for OpenAI API key and AWS credentials.
 """
@@ -12,7 +11,6 @@ import os
 import boto3
 import openai
 from dotenv import load_dotenv
-from pydub import AudioSegment
 
 # Global variables
 bucket = None
@@ -36,20 +34,12 @@ def config():
     bucket_path = 'RU/7520/'
 
 
-# A function to convert the audio file to mp3
-def convert_to_mp3(filename):
-    sound = AudioSegment.from_file(filename)
-    sound.export(filename[:-4] + ".mp3", format="mp3")
-    os.remove(filename)
-
-
 # A function to convert the audio file to text
 def audio_to_text(filename):
-    mp3_filename = filename[:-4] + ".mp3"
-    with open("C:/Users/rudae/Documents/unic_chatbot/gpt-3-fine-tuning/" + mp3_filename, "rb") as f:
+    with open("C:/Users/rudae/Documents/unic_chatbot/gpt-3-fine-tuning/" + filename, "rb") as f:
         result = openai.Audio.transcribe("whisper-1", f)
     transcript = result["text"]
-    os.remove(mp3_filename)
+    os.remove(filename)
     return transcript
 
 
@@ -65,7 +55,6 @@ def main():
             mp3_content = obj.get()['Body'].read()
             with open(output_file, 'wb') as f:
                 f.write(mp3_content)
-            convert_to_mp3(output_file) # issue with export
             result = audio_to_text(output_file)
             print(f"{datetime.datetime.now().replace(microsecond=0)}  {result}")
             print(f"{datetime.datetime.now().replace(microsecond=0)}  Done!")
