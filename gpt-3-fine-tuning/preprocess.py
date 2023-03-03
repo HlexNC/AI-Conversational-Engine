@@ -5,13 +5,14 @@
 @audio_to_text: Converts an audio file to text using OpenAI's Audio.transcribe method.
 @config: Loads the environment variables for OpenAI API key and AWS credentials.
 """
+import datetime
+import os
+
 # Imports
 import boto3
 import openai
-from pydub import AudioSegment
-import os
 from dotenv import load_dotenv
-import datetime
+from pydub import AudioSegment
 
 # Global variables
 bucket = None
@@ -30,26 +31,25 @@ def config():
         aws_access_key_id=aws_access_key_id,
         aws_secret_access_key=aws_secret_access_key
     )
+    global bucket, bucket_path
     bucket = s3.Bucket('recordings3cx')
     bucket_path = 'RU/7520/'
 
 
 # A function to convert the audio file to mp3
 def convert_to_mp3(filename):
-    sound = AudioSegment.from_wav(filename)
+    sound = AudioSegment.from_file(filename)
     sound.export(filename[:-4] + ".mp3", format="mp3")
-    # print(f"{datetime.datetime.now()} Success conversion to mp3")
+    os.remove(filename)
 
 
 # A function to convert the audio file to text
 def audio_to_text(filename):
     mp3_filename = filename[:-4] + ".mp3"
-    # print(f"\{{datetime.datetime.now()}} working with " + mp3_filename)
-    f = open("/content/" + mp3_filename, "rb")
-    result = openai.Audio.transcribe("whisper-1", f)
+    with open("C:/Users/rudae/Documents/unic_chatbot/gpt-3-fine-tuning/" + mp3_filename, "rb") as f:
+        result = openai.Audio.transcribe("whisper-1", f)
     transcript = result["text"]
     os.remove(mp3_filename)
-    os.remove(filename)
     return transcript
 
 
@@ -65,7 +65,7 @@ def main():
             mp3_content = obj.get()['Body'].read()
             with open(output_file, 'wb') as f:
                 f.write(mp3_content)
-            convert_to_mp3(output_file)
+            convert_to_mp3(output_file) # issue with export
             result = audio_to_text(output_file)
             print(f"{datetime.datetime.now().replace(microsecond=0)}  {result}")
             print(f"{datetime.datetime.now().replace(microsecond=0)}  Done!")
