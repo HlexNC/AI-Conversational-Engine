@@ -37,7 +37,7 @@ def config():
 # A function to convert the audio file to text
 def audio_to_text(filename):
     with open("C:/Users/rudae/Documents/unic_chatbot/gpt-3-fine-tuning/" + filename, "rb") as f:
-        result = openai.Audio.transcribe("whisper-1", f)
+        result = openai.Audio.translate("whisper-1", f)
     transcript = result["text"]
     os.remove(filename)
     return transcript
@@ -48,7 +48,7 @@ def main():
     config()
     for obj in bucket.objects.filter(Prefix=bucket_path):
         output_file = obj.key.split('/')[-1]
-        print(f"{datetime.datetime.now().replace(microsecond=0)}  working on" + output_file)
+        print(f"{datetime.datetime.now().replace(microsecond=0)} ({obj.size / 1024 / 1024} MB) working on " + output_file)
         if output_file == "":
             continue
         else:
@@ -57,7 +57,6 @@ def main():
                 f.write(mp3_content)
             result = audio_to_text(output_file)
             print(f"{datetime.datetime.now().replace(microsecond=0)}  {result}")
-            print(f"{datetime.datetime.now().replace(microsecond=0)}  Done!")
             # return result
 
 
