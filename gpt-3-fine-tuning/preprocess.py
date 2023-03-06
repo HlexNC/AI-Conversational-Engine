@@ -66,7 +66,7 @@ def audio_to_text(filename):
     :return: The text that is being appended to the JSONL file.
     """
     with open("C:/Users/rudae/Documents/unic_chatbot/gpt-3-fine-tuning/" + filename, "rb") as f:
-        result = openai.Audio.transcribe("whisper-1", f)
+        result = openai.Audio.translate("whisper-1", f)
     transcript = result["text"]
     os.remove(filename)
     return transcript
@@ -80,19 +80,15 @@ def main():
     config()
     for obj in bucket.objects.filter(Prefix=bucket_path):
         output_file = obj.key.split('/')[-1]
-        print(
-            f"{datetime.datetime.now().replace(microsecond=0)}  ({obj.size / 1024 / 1024} MB) working on " + output_file)
-        if output_file == "" or "International" not in output_file:
+        print(f"{datetime.datetime.now().replace(microsecond=0)} ({obj.size / 1024 / 1024} MB) working on " + output_file)
+        if (output_file == "") or (obj.size / 1024 / 1024 < 0.1):
             continue
         else:
             mp3_content = obj.get()['Body'].read()
             with open(output_file, 'wb') as f:
                 f.write(mp3_content)
             result = audio_to_text(output_file)
-            # openai.error.InvalidRequestError: Audio file is too short. Minimum audio length is 0.1 seconds.
-            result = result if "University of Nicosia" in result else ""
-            if result:
-                jsonl_append(output_file, result)
+            jsonl_append(output_file, result)
             print(f"{datetime.datetime.now().replace(microsecond=0)}  {result}")
     # bucket2.upload_file('../data/data.jsonl', 'data.jsonl')
 
