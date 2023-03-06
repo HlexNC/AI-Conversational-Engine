@@ -20,9 +20,9 @@ bucket_path = None
 # A function to retrieve the object from the bucket and process it
 def config():
     load_dotenv()
-    openai.api_key = os.getenv('openai_key')
-    aws_access_key_id = os.getenv('aws_access_key_id')
-    aws_secret_access_key = os.getenv('aws_secret_access_key')
+    openai.api_key = os.getenv('OPENAI_KEY')
+    aws_access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
+    aws_secret_access_key = os.getenv('AWS_ACCESS_KEY_ID')
     s3 = boto3.resource(
         service_name='s3',
         region_name='eu-west-1',
