@@ -1,6 +1,5 @@
 import openai as openai
 import json
-from sklearn.model_selection import train_test_split
 
 openai.api_key = ""
 
