@@ -49,7 +49,7 @@ def jsonl_append(filename, output, tokens, recoding_date, time, cost, size):
         'answer': '',
         'status': 'pending'
     }
-    with open(data_path + 'data2.jsonl', 'a') as f:
+    with open(data_path + 'data.jsonl', 'a') as f:
         json.dump(log, f)
         f.write('\n')
 
@@ -98,8 +98,8 @@ def main():
     start_file = datetime.datetime.now()
     for obj in bucket.objects.filter(Prefix=bucket_path):
         filename = obj.key.split('/')[-1]
-        if os.path.exists(data_path + 'data2.jsonl'):
-            with open(data_path + 'data2.jsonl', 'r') as f:
+        if os.path.exists(data_path + 'data.jsonl'):
+            with open(data_path + 'data.jsonl', 'r') as f:
                 if filename in f.read():
                     print(f"{datetime.datetime.now().replace(microsecond=0)} ({obj.size / 1e6:.2f} MB) already "
                           f"processed " + filename)
@@ -121,7 +121,7 @@ def main():
             cost = f"{(end - start).seconds * 0.006:.3f}"
             jsonl_append(filename, transcript, tokens, obj_date, (end - start).seconds, cost, obj_size)
             start_file = datetime.datetime.now()
-    bucket2.upload_file(data_path + 'data2.jsonl', '7520.jsonl')
+    bucket2.upload_file(data_path + 'data.jsonl', '7520.jsonl')
 
 
 if __name__ == "__main__":
