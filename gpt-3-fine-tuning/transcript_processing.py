@@ -43,7 +43,7 @@ def summarize_transcripts(row):
     try:
         response = openai.Completion.create(
             engine="text-davinci-003",
-            prompt=f"Summarize the text below\n\nText: {row['transcript']}\n\nSummary:\n",
+            prompt=f"Provide an analysis of the conversation in the text below by removing all names and other identifying information\n\nText: {row['transcript']}\n\nAnalysis:\n",
             temperature=0,
             max_tokens=257,
             top_p=1,
@@ -120,18 +120,18 @@ def process_data():
     """
     with open('../data/transcript_data.jsonl', 'r') as f:
         lines = f.readlines()
-    try:
-        for row in range(len(lines)):
-            data = json.loads(lines[row])
+    for row in range(len(lines)):
+        data = json.loads(lines[row])
+        if float(data['size']) < 1:
+            data['status'] = 'skipped'
+        else:
             data['summary'] = summarize_transcripts(data)
             data['question'] = get_questions(data)
             data['answer'] = get_answers(data)
-            with open('../data/transcript_data.jsonl', 'w') as f:
-                lines[row] = json.dumps(data) + '\n'
-                f.writelines(lines)
-            print(f"Processed {row + 1}")
-    except Exception as e:
-        print(e)
+        with open('../data/transcript_data.jsonl', 'w') as f:
+            lines[row] = json.dumps(data) + '\n'
+            f.writelines(lines)
+        print(f"Processed {row + 1}")
 
 
 if __name__ == '__main__':
