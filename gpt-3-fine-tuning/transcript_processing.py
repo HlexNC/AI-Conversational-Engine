@@ -31,86 +31,41 @@ def download_data():
         bucket.download_file(bucket_path + '7520.jsonl', '../data/transcript_data.jsonl')
 
 
-def summarize_transcripts(row):
+def get_knowledge_base(row):
     """
     Summarizes the transcripts using openai and prepares them for the conversion
     :param row: The data
-    :return: The summary
+    :return: The knowledge_base
     """
-    if row['summary'] != '':
-        print("Existed summary with a " + row['summary'])
-        return row['summary']
+    if row['knowledge_base'] != '':
+        print("Existed knowledge_base with a " + row['knowledge_base'])
+        return row['knowledge_base']
     try:
         response = openai.Completion.create(
             engine="text-davinci-003",
-            prompt=f"Provide an analysis of the conversation in the text below by removing all names and other identifying information\n\nText: {row['transcript']}\n\nAnalysis:\n",
-            temperature=0,
+            prompt=f"I want to you to create a knowledgebase of the University of Nicosia. Below is a transcript of a "
+                   f"phone call between a University representative and a caller. Collect none personal information "
+                   f"from the transcript below.\n\nTranscript: {row['transcript']}\n\nKnowledgebase: \n",
+            temperature=0.7,
             max_tokens=257,
             top_p=1,
             frequency_penalty=0,
             presence_penalty=0,
             stop=["\n\n"]
         )
-        print('Summary: ' + response['choices'][0]['text'])
+        print('knowledge_base: ' + response['choices'][0]['text'])
         return response['choices'][0]['text']
     except Exception as e:
         print(e)
         return
 
 
-def get_questions(row):
-    """
-    Gets question from the context using openai
-    :param row: The data
-    :return: The question
-    """
-    if row['question'] != '':
-        print("Existed questions with a " + row['question'])
-        return row['question']
-    try:
-        response = openai.Completion.create(
-            engine="text-davinci-003",
-            prompt=f"Write questions based on the text below\n\nText: {row['summary']}\n\nQuestions:\n1.",
-            temperature=0,
-            max_tokens=257,
-            top_p=1,
-            frequency_penalty=0,
-            presence_penalty=0,
-            stop=["\n\n"]
-        )
-        print('Question: ' + response['choices'][0]['text'])
-        return response['choices'][0]['text']
-    except Exception as e:
-        print(e)
-        return
-
-
-def get_answers(row):
-    """
-    Gets answers from the context using openai
-    :param row: The data
-    :return: The answers
-    """
-    if row['answer'] != '':
-        print("Existed answers with a " + withrow['answer'])
-        return row['answer']
-    try:
-        response = openai.Completion.create(
-            engine="text-davinci-003",
-            prompt=f"Write answer based on the text below\n\nText: {row['summary']}\n\nQuestions:\n{row['question']}\n"
-                   f"\nAnswers:\n1.",
-            temperature=0,
-            max_tokens=257,
-            top_p=1,
-            frequency_penalty=0,
-            presence_penalty=0,
-            stop=["\n\n"]
-        )
-        print('Answer: ' + response['choices'][0]['text'])
-        return response['choices'][0]['text']
-    except Exception as e:
-        print(e)
-        return
+def get_embedding(text, model='text-embedding-ada-002') -> list[float]:
+    result = openai.Embedding.create(
+        model=model,
+        input=text
+    )
+    return result["data"][0]["embedding"]
 
 
 def process_data():
@@ -124,11 +79,11 @@ def process_data():
         data = json.loads(lines[row])
         if float(data['size']) < 1:
             data['status'] = 'skipped'
+        elif data['knowledge_base'] != '':
+            data['status'] = 'knowledge_base_completed'
         else:
-            data['summary'] = summarize_transcripts(data)
-            data['question'] = get_questions(data)
-            data['answer'] = get_answers(data)
-        with open('../data/transcript_data.jsonl', 'w') as f:
+            data['knowledge_base'] = get_knowledge_base(data)
+        with open('../data/transcript_data.jsonl', 'w' ) as f:
             lines[row] = json.dumps(data) + '\n'
             f.writelines(lines)
         print(f"Processed {row + 1}")
