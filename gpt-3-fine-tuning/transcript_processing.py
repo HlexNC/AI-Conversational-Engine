@@ -38,34 +38,63 @@ def get_knowledge_base(row):
     :return: The knowledge_base
     """
     if row['knowledge_base'] != '':
-        print("Existed knowledge_base with a " + row['knowledge_base'])
+        print("Skipped knowledge_base with a: " + row['knowledge_base'])
         return row['knowledge_base']
     try:
-        response = openai.Completion.create(
-            engine="text-davinci-003",
-            prompt=f"I want to you to create a knowledgebase of the University of Nicosia. Below is a transcript of a "
-                   f"phone call between a University representative and a caller. Collect none personal information "
-                   f"from the transcript below.\n\nTranscript: {row['transcript']}\n\nKnowledgebase: \n",
-            temperature=0.7,
-            max_tokens=257,
-            top_p=1,
-            frequency_penalty=0,
-            presence_penalty=0,
-            stop=["\n\n"]
-        )
-        print('knowledge_base: ' + response['choices'][0]['text'])
-        return response['choices'][0]['text']
+        transcript = [row['nameless_transcript'][i:i + 4000] for i in range(0, len(row['nameless_transcript']), 4000)]
+        generated_chunks = []
+        for transcript_chunk in transcript:
+            respones = openai.Completion.create(
+                engine="text-davinci-003",
+                prompt=f"I want to you to create a knowledgebase of the University of Nicosia. Below is a transcript "
+                       f"of a phone call between a University representative and a caller. Collect none personal "
+                       f"information from the transcript below.\n\nTranscript: {row['transcript']}"
+                       f"\n\nKnowledgebase: \n - ",
+                temperature=0.7,
+                max_tokens=257,
+                top_p=1,
+                frequency_penalty=0,
+                presence_penalty=0,
+                stop=["\n\n"]
+            )
+            print('knowledge_base: ' + respones['choices'][0]['text'])
+            generated_chunks.append(respones['choices'][0]['text'])
+        return "".join(generated_chunks)
     except Exception as e:
         print(e)
         return
 
 
-def get_embedding(text, model='text-embedding-ada-002') -> list[float]:
-    result = openai.Embedding.create(
-        model=model,
-        input=text
-    )
-    return result["data"][0]["embedding"]
+def nameless_transcript(row):
+    """
+    Summarizes the transcripts using openai and prepares them for the conversion
+    :param row: The data
+    :return: The nameless_transcript
+    """
+    if row['nameless_transcript'] != '':
+        print("Skipped nameless_transcript with a: " + row['nameless_transcript'])
+        return row['nameless_transcript']
+    try:
+        transcript = [row['nameless_transcript'][i:i + 4000] for i in range(0, len(row['nameless_transcript']), 4000)]
+        generated_chunks = []
+        for transcript_chunk in transcript:
+            respones = openai.Completion.create(
+                engine="text-davinci-003",
+                prompt=f"Remove the names from the transcript and replace with a placeholder.\n\n"
+                       f"Transcript: {transcript_chunk}\n\nNameless Transcript: \n",
+                temperature=0.7,
+                max_tokens=257,
+                top_p=1,
+                frequency_penalty=0,
+                presence_penalty=0,
+                stop=["\n\n"]
+            )
+            print('nameless_transcript: ' + respones['choices'][0]['text'])
+            generated_chunks.append(respones['choices'][0]['text'])
+        return "".join(generated_chunks)
+    except Exception as e:
+        print(e)
+        return
 
 
 def process_data():
@@ -79,14 +108,15 @@ def process_data():
         data = json.loads(lines[row])
         if float(data['size']) < 1:
             data['status'] = 'skipped'
-        elif data['knowledge_base'] != '':
-            data['status'] = 'knowledge_base_completed'
+            print(f"Skipped {row + 1}")
         else:
             data['knowledge_base'] = get_knowledge_base(data)
-        with open('../data/transcript_data.jsonl', 'w' ) as f:
+            data['nameless_transcript'] = nameless_transcript(data)
+            data['status'] = 'kb_completed'
+        with open('../data/transcript_data.jsonl', 'w') as f:
             lines[row] = json.dumps(data) + '\n'
             f.writelines(lines)
-        print(f"Processed {row + 1}")
+            print(f"Processed {row + 1}")
 
 
 if __name__ == '__main__':
@@ -95,3 +125,22 @@ if __name__ == '__main__':
 
     # 2. Process the data
     process_data()
+
+
+# message = "Your long message here..."
+# message_chunks = [message[i:i+4000] for i in range(0, len(message), 4000)]
+#
+# generated_chunks = []
+# for chunk in message_chunks:
+#     prompt = f"Please complete the following message:\n\n{chunk}\n\nCompletion:"
+#     response = openai.Completion.create(
+#         engine="davinci",
+#         prompt=prompt,
+#         max_tokens=100,
+#         n=1,
+#         stop=None,
+#         temperature=0.5,
+#     )
+#     generated_chunks.append(response.choices[0].text)
+#
+# generated_message = "".join(generated_chunks)
