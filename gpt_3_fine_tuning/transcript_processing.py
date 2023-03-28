@@ -1,5 +1,5 @@
 import boto3
-import openai
+from gpt_3_fine_tuning.openai import get_completion
 from shutil import copyfile
 import os
 import json
@@ -12,7 +12,6 @@ def download_data():
     :return: None
     """
     load_dotenv()
-    openai.api_key = os.getenv('OPENAI_KEY')
     if os.path.exists('../data/transcript_data.jsonl'):
         return
     elif os.path.exists('../data/data.jsonl'):
@@ -31,46 +30,15 @@ def download_data():
         bucket.download_file(bucket_path + '7520.jsonl', '../data/transcript_data.jsonl')
 
 
-def get_knowledge_base(row):
-    """
-    Summarizes the transcripts using openai and prepares them for the conversion
-    :param row: The data
-    :return: The knowledge_base
-    """
-    if row['knowledge_base'] != '':
-        print("Skipped knowledge_base with a: " + row['knowledge_base'])
-        return row['knowledge_base']
-    try:
-        transcript = [row['nameless_transcript'][i:i + 4000] for i in range(0, len(row['nameless_transcript']), 4000)]
-        generated_chunks = []
-        for transcript_chunk in transcript:
-            respones = openai.Completion.create(
-                engine="text-davinci-003",
-                prompt=f"I want to you to create a knowledgebase of the University of Nicosia. Below is a transcript "
-                       f"of a phone call between a University representative and a caller. Collect none personal "
-                       f"information from the transcript below.\n\nTranscript: {row['transcript']}"
-                       f"\n\nKnowledgebase: \n - ",
-                temperature=0.7,
-                max_tokens=257,
-                top_p=1,
-                frequency_penalty=0,
-                presence_penalty=0,
-                stop=["\n\n"]
-            )
-            print('knowledge_base: ' + respones['choices'][0]['text'])
-            generated_chunks.append(respones['choices'][0]['text'])
-        return "".join(generated_chunks)
-    except Exception as e:
-        print(e)
-        return
-
-
-def nameless_transcript(row):
+def get_nameless_transcript(row):
     """
     Summarizes the transcripts using openai and prepares them for the conversion
     :param row: The data
     :return: The nameless_transcript
     """
+    if row['status'] == 'skipped':
+        print("Skipped status")
+        return row['nameless_transcript']
     if row['nameless_transcript'] != '':
         print("Skipped nameless_transcript with a: " + row['nameless_transcript'])
         return row['nameless_transcript']
@@ -78,20 +46,43 @@ def nameless_transcript(row):
         transcript = [row['nameless_transcript'][i:i + 4000] for i in range(0, len(row['nameless_transcript']), 4000)]
         generated_chunks = []
         for transcript_chunk in transcript:
-            respones = openai.Completion.create(
-                engine="text-davinci-003",
-                prompt=f"Remove the names from the transcript and replace with a placeholder.\n\n"
-                       f"Transcript: {transcript_chunk}\n\nNameless Transcript: \n",
-                temperature=0.7,
-                max_tokens=257,
-                top_p=1,
-                frequency_penalty=0,
-                presence_penalty=0,
-                stop=["\n\n"]
-            )
+            message = f"Remove the names from the transcript and replace with a placeholder.\n\nTranscript: {transcript_chunk}\n\nNameless Transcript: \n"
+            respones = get_completion(message)
             print('nameless_transcript: ' + respones['choices'][0]['text'])
             generated_chunks.append(respones['choices'][0]['text'])
-        return "".join(generated_chunks)
+        nameless_transcript = "".join(generated_chunks)
+        if nameless_transcript == '':
+            nameless_transcript = 'No nameless transcript was generated'
+        return nameless_transcript
+    except Exception as e:
+        print(e)
+        return
+
+
+def get_knowledge_base(row):
+    """
+    Summarizes the transcripts using openai and prepares them for the conversion
+    :param row: The data
+    :return: The knowledge_base
+    """
+    print("Processing: " + row['filename'])
+    if row['status'] == 'skipped':
+        print("Skipped status")
+        return row['knowledge_base']
+    if row['knowledge_base'] != '' and ' - ' in row['knowledge_base']:
+        print("Skipped knowledge_base with a: " + row['knowledge_base'])
+        return row['knowledge_base']
+    try:
+        transcript = [row['nameless_transcript'][i:i + 4000] for i in range(0, len(row['nameless_transcript']), 4000)]
+        generated_chunks = []
+        for transcript_chunk in transcript:
+            message = f"I want to you to create a knowledgebase of the University of Nicosia. Below is a transcript of a phone call between a University representative and a caller. Collect none personal information from the transcript below.\n\nTranscript: {transcript_chunk}\n\nKnowledgebase: \n - The"
+            respones = get_completion(message)
+            generated_chunks.append(respones['choices'][0]['text'])
+        knowledge_base = "".join(generated_chunks)
+        if knowledge_base == '':
+            knowledge_base = 'No knowledge base was generated'
+        return knowledge_base
     except Exception as e:
         print(e)
         return
@@ -110,8 +101,8 @@ def process_data():
             data['status'] = 'skipped'
             print(f"Skipped {row + 1}")
         else:
+            data['nameless_transcript'] = get_nameless_transcript(data)
             data['knowledge_base'] = get_knowledge_base(data)
-            data['nameless_transcript'] = nameless_transcript(data)
             data['status'] = 'kb_completed'
         with open('../data/transcript_data.jsonl', 'w') as f:
             lines[row] = json.dumps(data) + '\n'
@@ -125,22 +116,3 @@ if __name__ == '__main__':
 
     # 2. Process the data
     process_data()
-
-
-# message = "Your long message here..."
-# message_chunks = [message[i:i+4000] for i in range(0, len(message), 4000)]
-#
-# generated_chunks = []
-# for chunk in message_chunks:
-#     prompt = f"Please complete the following message:\n\n{chunk}\n\nCompletion:"
-#     response = openai.Completion.create(
-#         engine="davinci",
-#         prompt=prompt,
-#         max_tokens=100,
-#         n=1,
-#         stop=None,
-#         temperature=0.5,
-#     )
-#     generated_chunks.append(response.choices[0].text)
-#
-# generated_message = "".join(generated_chunks)
