@@ -608,5 +608,15 @@ archived/
 # Data
 data/
 
+# Node.js
+package.json
+package-lock.json
 
+#chatbot2 hosting
+chatbot2/node_modules/
+chatbot2/package-lock.json
+chatbot2/package.json
 
+chatbot2/messages.jsonl
+
+# Experemental chat

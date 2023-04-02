@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<!-- http-server -p 3000 -->
+
+<head>
+    <meta charset="UTF-8">
+    <title>JSONL Chat</title>
+    <style>
+        body {
+            background-color: #282a36;
+            color: #f8f8f2;
+            font-family: "JetBrains Mono", monospace;
+            font-size: 16px;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            justify-content: flex-end;
+        }
+
+        .message {
+            margin-bottom: 5px;
+            padding: 10px;
+        }
+
+        .input {
+            margin-top: 10px;
+            padding: 10px;
+        }
+
+        .input input {
+            background-color: transparent;
+            border: none;
+            color: #BBBBBB;
+            font-family: "JetBrains Mono", monospace;
+            font-size: 16px;
+            outline: none;
+        }
+
+        .label {
+            color: #BBBBBB;
+        }
+
+        .message-text.user-input {
+            color: #007F00;
+            font-style: italic;
+        }
+
+        .message-text.bot-input {
+            color: #BBBBBB;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div id="messages"></div>
+        <div class="input">
+            <form onsubmit="return false;">
+                <input type="text" id="message" placeholder="Type your message...">
+            </form>
+        </div>
+    </div>
+    <script src="client.js"></script>
+</body>
+
+</html>
