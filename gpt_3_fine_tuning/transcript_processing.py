@@ -1,118 +1,81 @@
-import boto3
-from gpt_3_fine_tuning.openai import get_completion
-from shutil import copyfile
 import os
-import json
 from dotenv import load_dotenv
+import asyncio
+import json
+import openai
+import pandas as pd
+from gpt_3_fine_tuning.models import get_completion_async
 
 
-def download_data():
+async def process_row(row: dict, api_key: str) -> dict:
     """
-    Downloads the data from the S3 bucket to ../data/transcript_data.jsonl
-    :return: None
+    Process a single row of the transcript database.
+    :param row: The row to process.
+    :param api_key: The OpenAI API key to use.
+    :return: The processed row.
     """
-    load_dotenv()
-    if os.path.exists('../data/transcript_data.jsonl'):
-        return
-    elif os.path.exists('../data/data.jsonl'):
-        copyfile('../data/data.jsonl', '../data/transcript_data.jsonl')
-    else:
-        bucket_path = ''
-        aws_access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
-        aws_secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
-        s3 = boto3.resource(
-            service_name='s3',
-            region_name='eu-west-1',
-            aws_access_key_id=aws_access_key_id,
-            aws_secret_access_key=aws_secret_access_key
-        )
-        bucket = s3.Bucket('3cxtranscriptions')
-        bucket.download_file(bucket_path + '7520.jsonl', '../data/transcript_data.jsonl')
+    openai.api_key = api_key
 
-
-def get_nameless_transcript(row):
-    """
-    Summarizes the transcripts using openai and prepares them for the conversion
-    :param row: The data
-    :return: The nameless_transcript
-    """
-    if row['status'] == 'skipped':
-        print("Skipped status")
-        return row['nameless_transcript']
-    if row['nameless_transcript'] != '':
-        print("Skipped nameless_transcript with a: " + row['nameless_transcript'])
-        return row['nameless_transcript']
     try:
-        transcript = [row['nameless_transcript'][i:i + 4000] for i in range(0, len(row['nameless_transcript']), 4000)]
+        transcript = [row['transcript'][i:i + 4000] for i in range(0, len(row['transcript']), 4000)]
         generated_chunks = []
         for transcript_chunk in transcript:
-            message = f"Remove the names from the transcript and replace with a placeholder.\n\nTranscript: {transcript_chunk}\n\nNameless Transcript: \n"
-            respones = get_completion(message)
-            print('nameless_transcript: ' + respones['choices'][0]['text'])
-            generated_chunks.append(respones['choices'][0]['text'])
+            message = f"Replace all names and surnames in the transcript with a placeholder such as [Name], " \
+                      f"[Surname], or [Person].\n\nTranscript: {transcript_chunk}\n\nNameless Transcript: \n"
+            response = await get_completion_async(message, max_tokens=1000)
+            generated_chunks.append(response)
         nameless_transcript = "".join(generated_chunks)
-        if nameless_transcript == '':
-            nameless_transcript = 'No nameless transcript was generated'
-        return nameless_transcript
+        status = "success"
     except Exception as e:
-        print(e)
-        return
+        nameless_transcript = ""
+        status = f"error: {e}"
+
+    return {"nameless_transcript": nameless_transcript, "status": status}
 
 
-def get_knowledge_base(row):
+async def process_data_async(event_loop: asyncio.AbstractEventLoop, input_path: str, output_path: str) -> None:
     """
-    Summarizes the transcripts using openai and prepares them for the conversion
-    :param row: The data
-    :return: The knowledge_base
+    Process the transcript database.
+    :param event_loop: The event loop to use.
+    :param input_path: The path to the input file.
+    :param output_path: The path to the output file.
     """
-    print("Processing: " + row['filename'])
-    if row['status'] == 'skipped':
-        print("Skipped status")
-        return row['knowledge_base']
-    if row['knowledge_base'] != '' and ' - ' in row['knowledge_base']:
-        print("Skipped knowledge_base with a: " + row['knowledge_base'])
-        return row['knowledge_base']
-    try:
-        transcript = [row['nameless_transcript'][i:i + 4000] for i in range(0, len(row['nameless_transcript']), 4000)]
-        generated_chunks = []
-        for transcript_chunk in transcript:
-            message = f"I want to you to create a knowledgebase of the University of Nicosia. Below is a transcript of a phone call between a University representative and a caller. Collect none personal information from the transcript below.\n\nTranscript: {transcript_chunk}\n\nKnowledgebase: \n - The"
-            respones = get_completion(message)
-            generated_chunks.append(respones['choices'][0]['text'])
-        knowledge_base = "".join(generated_chunks)
-        if knowledge_base == '':
-            knowledge_base = 'No knowledge base was generated'
-        return knowledge_base
-    except Exception as e:
-        print(e)
-        return
+    df = pd.read_json(input_path, lines=True)
+    df = df[df["transcript"].str.len() >= 1000]
+    num_rows = len(df.index)
+
+    load_dotenv()
+    api_keys = os.getenv("OPENAI_API_KEYS").split(",")
+
+    semaphore = asyncio.Semaphore(5)
+
+    async def worker(row: dict, i: int) -> dict:
+        async with semaphore:
+            if len(row["transcript"]) < 1000 or row.get("status") == "success":
+                return row
+
+            api_key = api_keys.pop(0)
+            api_keys.append(api_key)
+
+            result = await process_row(row, api_key)
+            row.update(result)
+
+            percent_done = (i + 1) / num_rows * 100
+            print(f"Processing row {i+1}/{num_rows} ({percent_done:.2f}%)")
+
+            return row
+
+    tasks = [event_loop.create_task(worker(row, i)) for i, row in enumerate(df.to_dict("records"))]
+    results = await asyncio.gather(*tasks)
+
+    df["nameless_transcript"] = [result["nameless_transcript"] for result in results]
+    df["status"] = [result["status"] for result in results]
+
+    df.to_json(output_path, orient='records', lines=True)
 
 
-def process_data():
-    """
-    Processes the data and saves it to ../data/transcript_data.jsonl
-    :return: None
-    """
-    with open('../data/transcript_data.jsonl', 'r') as f:
-        lines = f.readlines()
-    for row in range(len(lines)):
-        data = json.loads(lines[row])
-        if float(data['size']) < 1:
-            data['status'] = 'skipped'
-            print(f"Skipped {row + 1}")
-        else:
-            data['nameless_transcript'] = get_nameless_transcript(data)
-            data['knowledge_base'] = get_knowledge_base(data)
-            data['status'] = 'kb_completed'
-        with open('../data/transcript_data.jsonl', 'w') as f:
-            lines[row] = json.dumps(data) + '\n'
-            f.writelines(lines)
-            print(f"Processed {row + 1}")
-
-
-if __name__ == '__main__':
-    # 1. Download the data
-    download_data()
-
-    # 2. Process the data
-    process_data()
+if __name__ == "__main__":
+    input_file = "../data/data.jsonl"
+    output_file = "../data/transcript_database3.jsonl"
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(process_data_async(loop, input_file, output_file))

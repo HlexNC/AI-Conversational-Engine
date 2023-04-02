@@ -1,33 +1,30 @@
-import sys
-sys.path.append('c:/users/rudae/appdata/local/programs/python/python39/lib/site-packages')
-
 import pandas as pd
-import numpy as np
-from gpt_3_fine_tuning.openai import get_embedding, get_similarity
+from gpt_3_fine_tuning.models import get_embedding, get_similarity
 
 
-def search_embedding(df, search_description, n=3, pprint=True) -> list[str]:
-    embedding_search = get_embedding(
-        search_description,
-        engine="text-embedding-ada-002"
-    )
-    df["embedding"] = df.embedding.apply(lambda x: get_similarity(x, embedding_search))
-
-    results = (
-        df.sort_values("embedding", ascending=False)
-        .head(n)
-        .combined.str.replace("Title: ", "")
-        .str.replace("; Content:", ": ")
-    )
-    if pprint:
-        for r in results:
-            print(r[:200])
-            print()
-    return results
+def merge_dataframes(df1, df2):
+    df1['embedding'] = df1['embedding'].apply(tuple)
+    df2['embedding'] = df2['embedding'].apply(tuple)
+    merged_df = pd.merge(df1, df2, on=['source', 'takeaway', 'status', 'embedding'], how='outer')
+    merged_df['embedding'] = merged_df['embedding'].apply(list)
+    return merged_df
 
 
-if __name__ == "__main__":
-    df = pd.read_json('../data/nameless_embedding.jsonl', lines=True)
-    search_word = input("Enter the word to search for: ")
-    df["embedding"] = df.embedding.apply(np.array)
-    res = search_embedding(df, search_word, n=3)
+def search_takeaways(prompt, df, n=3):
+    prompt_embedding = get_embedding(prompt)
+    similarities = [get_similarity(prompt_embedding, row['embedding']) for index, row in df.iterrows()]
+    df['similarity'] = similarities
+    top_n_df = df.nlargest(n, 'similarity')
+    top_n_takeaways = top_n_df['takeaway'].tolist()
+    return top_n_takeaways
+
+if __name__ == '__main__':
+    df = pd.read_json('../data/nameless_embedding2.jsonl', lines=True)
+    df2 = pd.read_json('../data/website_embedding.jsonl', lines=True)
+    df = merge_dataframes(df, df2)
+    prompt = 'Overall UNIC description with useful information / context'
+    top_3_takeaways = search_takeaways(prompt, df)
+
+
+# How to name a file containng chatbot code?
+ # file name: chatbot.py

@@ -601,3 +601,12 @@ FodyWeavers.xsd
 .vscode/settings.json
 data/data.jsonl
 data/transcript_data.jsonl
+
+# Archived data
+archived/
+
+# Data
+data/
+
+
+
