@@ -614,9 +614,9 @@ package-lock.json
 
 #chatbot2 hosting
 chatbot2/node_modules/
-chatbot2/package-lock.json
-chatbot2/package.json
+chatbot2/server/package-lock.json
+chatbot2/server/package.json
 
-chatbot2/messages.jsonl
+chatbot2/server/messages.jsonl
 
 # Experemental chat

@@ -16,6 +16,6 @@ def get_embeddings(df, col):
 
 
 if __name__ == '__main__':
-    df = pd.read_json('../data/website_data.jsonl', lines=True)
-    df = get_embeddings(df, 'takeaway')
-    df.to_json('../data/website_embedding.jsonl', orient='records', lines=True)
+    df = pd.read_json('../data/conversation_database.jsonl', lines=True)
+    df = get_embeddings(df, 'content')
+    df.to_json('../data/conversation_embedding.jsonl', orient='records', lines=True)

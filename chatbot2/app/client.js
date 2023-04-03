@@ -1,6 +1,10 @@
 const chatMessages = document.querySelector("#messages");
 const chatInput = document.querySelector("#message");
 
+// Connect to WebSocket server
+const ws = new WebSocket("ws://localhost:3000");
+
+console.log("Connecting to WebSocket server...");
 // Function to add a new message to the chat
 function addMessage(message, role) {
     const newMessage = document.createElement("div");
@@ -19,6 +23,12 @@ function addMessage(message, role) {
     chatMessages.appendChild(newMessage);
 }
 
+// Listen for messages from the server
+ws.addEventListener("message", (event) => {
+  const message = JSON.parse(event.data);
+  addMessage(message.message, message.role);
+});
+
 // Function to handle form submission
 function handleFormSubmit(event) {
     event.preventDefault();
@@ -26,23 +36,9 @@ function handleFormSubmit(event) {
     if (message) {
         addMessage(message, "user");
         chatInput.value = "";
-        fetch("/chatbot", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ message, role: "user" }),
-        });
+        // Send the message to the server using WebSockets
+        ws.send(JSON.stringify({ message, role: "user" }));
     }
-}
-
-// Function to load messages from the server
-async function loadMessages() {
-    const response = await fetch("/messages");
-    const messages = await response.json();
-    messages.forEach((message) => {
-        addMessage(message.message, message.role);
-    });
 }
 
 // Add event listener for form submission
@@ -52,5 +48,11 @@ chatInput.addEventListener("keydown", (event) => {
     }
 });
 
-// Load messages from the server
+async function loadMessages() {
+    const response = await fetch("http://localhost:3000/messages");
+    const messages = await response.json();
+    messages.forEach((message) => {
+        addMessage(message.message, message.role);
+    });
+}
 loadMessages();
