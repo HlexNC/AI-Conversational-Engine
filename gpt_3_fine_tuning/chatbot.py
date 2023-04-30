@@ -4,11 +4,15 @@ import pandas as pd
 
 
 def get_answer(message, df):
-    top_3_takeaways = "\n".join(search_takeaways(message, df))
-    message = f'Data:\n{top_3_takeaways}\n\nUsing the data reply to the following message:\n\nMessage: {message}\n' \
-              f'\nYou are an AI assistant for the University of Nicosia. You provide answers to user inquiries using ' \
-              f'the data provided. Use a friendly and professional tone.\nUse data only if necessary.\n\nAnswer: '
-    answer = get_completion(message)
+    try:
+        top_3_takeaways = "\n".join(search_takeaways(message, df, n=1))
+        message = f'Data:\n{top_3_takeaways}\n\nUsing the data reply to the following message:\n\nMessage: {message}\n' \
+                  f'\nYou are an AI assistant for the University of Nicosia. You provide answers to user inquiries using ' \
+                  f'the data provided. Use a friendly and professional tone.\nUse data only if necessary.\n\nAnswer: '
+        answer = get_completion(message)
+    except Exception as e:
+        print(e)
+        answer = 'Sorry, I do not understand your question.'
     return answer
 
 

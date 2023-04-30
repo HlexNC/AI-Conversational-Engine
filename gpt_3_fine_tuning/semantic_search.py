@@ -1,5 +1,5 @@
 import pandas as pd
-from gpt_3_fine_tuning.models import get_embedding, get_similarity
+from gpt_3_fine_tuning.models import get_embedding, semantic_search
 
 
 def merge_dataframes(df1, df2):
@@ -22,17 +22,20 @@ def merge_dataframes_3(df1, df2, df3):
 
 def search_takeaways(prompt, df, n=3):
     prompt_embedding = get_embedding(prompt)
-    similarities = [get_similarity(prompt_embedding, row['embedding']) for index, row in df.iterrows()]
+    similarities = [semantic_search(prompt_embedding, row['embedding']) for index, row in df.iterrows()]
     df['similarity'] = similarities
     top_n_df = df.nlargest(n, 'similarity')
     top_n_takeaways = top_n_df['takeaway'].tolist()
     return top_n_takeaways
 
+
 if __name__ == '__main__':
-    df = pd.read_json('../data/nameless_embedding2.jsonl', lines=True)
+    df = pd.read_json('../data/nameless_embedding.jsonl', lines=True)
     df2 = pd.read_json('../data/website_embedding.jsonl', lines=True)
-    df = merge_dataframes(df, df2)
-    prompt = 'What is the tuition cost of the University of Nicosia?'
-    top_3_takeaways = search_takeaways(prompt, df)
+    df3 = pd.read_json('../data/conversation_embedding.jsonl', lines=True)
+    df = merge_dataframes_3(df, df2, df3)
+    prompt = "What are the admission requirements for the University of Nicosia (UNIC)?"
+    # top_3_takeaways = "\n".join(search_takeaways(prompt, df))
+    top_3_takeaways = "\n".join(search_takeaways(prompt, df)).replace("\n", "\\n")
 
     print(top_3_takeaways)

@@ -33,6 +33,14 @@ def get_completion(message, model="text-davinci-003", max_tokens=257) -> str:
     return response["choices"][0]["text"]
 
 
+def get_chat_completion(messages, model="gpt-3.5-turbo"):
+    response = openai.ChatCompletion.create(
+        model=model,
+        messages=messages
+    )
+    return response.choices[0]['message'].content
+
+
 @retry(wait=wait_random_exponential(min=1, max=20), stop=stop_after_attempt(3))
 async def get_completion_async(message, model="text-davinci-003", max_tokens=257) -> str:
     response = await openai.Completion.acreate(
@@ -55,6 +63,7 @@ async def get_embedding_async(text: str, model="text-embedding-ada-002") -> list
         model=model,
     )
     return response['data'][0]["embedding"]
+
 
 @retry(wait=wait_random_exponential(min=1, max=20), stop=stop_after_attempt(3))
 def fine_tune(data: str) -> str:
@@ -85,5 +94,5 @@ def cosine_similarity(a, b):
     return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
 
 
-def get_similarity(embedding_1: list[float], embedding_2: list[float]) -> float:
+def semantic_search(embedding_1: list[float], embedding_2: list[float]) -> float:
     return cosine_similarity(embedding_1, embedding_2)
