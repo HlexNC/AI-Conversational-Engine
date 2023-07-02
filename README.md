@@ -28,3 +28,8 @@ This was a fun project to work on. We hope you enjoy exploring it and find it us
 ## License
 
 This project is open source and available under the [MIT License](LICENSE).
+
+---
+
+![WebVersion](https://github.com/HlexNC/UNIC_ChatBot/assets/66517969/e19f7eab-82c5-49bc-a124-61e25494918e)
+![TerminalVersion](https://github.com/HlexNC/UNIC_ChatBot/assets/66517969/ce219d19-cb28-46a0-acfd-5b09245ee3dc)
