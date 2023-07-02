@@ -25,3 +25,6 @@ Feel free to fork this repository, create pull requests, or use the code in your
 
 This was a fun project to work on. We hope you enjoy exploring it and find it useful. Good luck 😄👍
 
+## License
+
+This project is open source and available under the [MIT License](LICENSE).
