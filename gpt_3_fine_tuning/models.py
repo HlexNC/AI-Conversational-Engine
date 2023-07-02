@@ -57,6 +57,18 @@ async def get_completion_async(message, model="text-davinci-003", max_tokens=257
 
 
 @retry(wait=wait_random_exponential(min=1, max=20), stop=stop_after_attempt(3))
+async def get_edit_async(message, instruction, model="text-davinci-edit-001") -> str:
+    response = await openai.Edit.acreate(
+        model=model,
+        input=message,
+        instruction=instruction,
+        temperature=0.7,
+        top_p=1,
+    )
+    return response["choices"][0]["text"]
+
+
+@retry(wait=wait_random_exponential(min=1, max=20), stop=stop_after_attempt(3))
 async def get_embedding_async(text: str, model="text-embedding-ada-002") -> list[float]:
     response = await openai.Embedding.acreate(
         input=text,
