@@ -1,32 +1,27 @@
-# UNICbot: Your University of Nicosia Guide.
+# UNICbot: Your University of Nicosia Guide
 
-## Project Architecture
+Welcome to the UNICbot repository, your guide to the University of Nicosia. This project is a comprehensive solution that includes code snippets to connect to a database inside an AWS Bucket, process the database, transcribe videos and audio files, and much more. The highlight of this repository is the UNICorn 🦄 AI assistant, available in both web and terminal versions.
 
-```txt
-UNICbot
-├── main.py
-├── gpt-3-fine-tuning
-│   ├── model.py
-│   ├── preprocess.py
-│   ├── train.py
-│   └── test.py
-├── chatbot
-│   ├── chatbot.py
-│   ├── config.py
-│   └── utils.py
-├── data
-│   ├── test.txt
-│   └── train.txt
-├── saved_models
-│   └── model.h5
-├── logs
-│   └── log.txt
-├── .gitignore
-├── .gitattributes
-├── LICENSE
-└── README.md
-```
+## Features
 
-## Noticed Issues:
+* **Database Connection:** Connects to a database inside an AWS Bucket.
+* **Data Processing:** Extracts valuable takeaways from the database and processes them asynchronously (with a limit of 5 parallel processes).
+* **Transcription:** Transcribes videos and audio files.
+* **AI Assistant:** Uses OpenAI's GPT-3 and Embedding to power the UNICorn 🦄 AI assistant.
 
-![](https://user-images.githubusercontent.com/66517969/216963343-51c1dfac-4569-4ec9-b3b9-71c93cfa5e64.png)
+## Prerequisites
+
+Please note that you will need a `.env` file and a `database` folder to work with this project. Only the code is open source.
+
+## Usage
+
+After setting up the prerequisites, you can explore the code snippets and use them as per your requirements. If you want to use the AI assistant, you can access it via the web or terminal versions.
+
+## Contribution
+
+Feel free to fork this repository, create pull requests, or use the code in your own projects. 
+
+## Acknowledgements
+
+This was a fun project to work on. We hope you enjoy exploring it and find it useful. Good luck 😄👍
+
