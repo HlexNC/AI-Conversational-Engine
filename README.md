@@ -1,6 +1,6 @@
-# UNICbot: Your Guide to the University of Nicosia 
+# AI-Conversational-Engine
 
-Welcome to the UNICbot repository – your comprehensive guide to the University of Nicosia. This project encapsulates an array of functionalities, including code snippets for database connection to an AWS Bucket, asynchronous data processing, transcription of videos and audio files, and more. The crown jewel of this repository is the UNICorn 🦄 AI assistant, which is conveniently accessible via web and terminal versions.
+AI-Conversational-Engine is a sophisticated chatbot framework designed to provide dynamic and intelligent conversational experiences. Leveraging advanced AI models, including GPT-3 for natural language understanding and processing, this engine is equipped to handle a wide range of conversational tasks, from simple Q&A to complex dialogues across various domains.
 
 ---
 
@@ -8,12 +8,13 @@ Welcome to the UNICbot repository – your comprehensive guide to the University
 
 ---
 
-## Key Features
+## Features
 
-* **Database Connection:** Facilitates connection to a database housed in an AWS Bucket.
-* **Data Processing:** Extracts and processes critical insights from the database asynchronously, with a cap of 5 concurrent processes.
-* **Transcription:** Converts audio and video files into written transcripts.
-* **AI Assistant:** Leverages the power of OpenAI's GPT-3 and Embedding to drive the UNICorn 🦄 AI assistant.
+- **GPT-3 Integration**: Utilizes the powerful GPT-3 model for generating human-like responses.
+- **Audio Processing Capabilities**: Supports audio inputs for conversations, including speech-to-text processing.
+- **Semantic Search**: Enhances conversations with deep semantic search capabilities, allowing for precise answers and context-aware dialogues.
+- **Modular Architecture**: Designed with a modular architecture for easy customization and scalability.
+- **Client-Server Model**: Includes a ready-to-deploy server and client interface for immediate use and testing.
 
 ---
 
