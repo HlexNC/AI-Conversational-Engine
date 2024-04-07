@@ -11,11 +11,11 @@ const server = require("http").createServer(app);
 const wss = new WebSocket.Server({ server });
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname, "../app")));
+app.use(express.static(path.join(__dirname, "../client")));
 
-// Serve index.html file on root path
+// Serve chat_interface.html file on root path
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "../app/index.html"));
+  res.sendFile(path.join(__dirname, "../client/chat_interface.html"));
 });
 
 function broadcastMessage(message) {
