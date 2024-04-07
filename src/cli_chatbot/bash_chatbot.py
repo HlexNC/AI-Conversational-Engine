@@ -1,8 +1,8 @@
 import os
 import openai
 import pandas as pd
-from gpt_3_fine_tuning.semantic_search import search_takeaways, merge_dataframes_3
-from gpt_3_fine_tuning.models import get_chat_completion, get_completion
+from src.ai.semantic_query_processor import search_takeaways
+from src.ai.model_manager import get_chat_completion, get_completion
 from dotenv import load_dotenv
 
 messages_data = []
