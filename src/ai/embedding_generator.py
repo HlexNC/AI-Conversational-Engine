@@ -1,5 +1,5 @@
 # Imports
-from gpt_3_fine_tuning.models import get_embedding
+from src.ai.model_manager import get_embedding
 import pandas as pd
 
 

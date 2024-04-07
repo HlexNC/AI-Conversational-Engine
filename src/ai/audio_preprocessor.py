@@ -1,5 +1,5 @@
 """
-:author: Alex Rudaev
+:author: HlexNC
 :created_on: 2023-02-14
 :updated_on: 2023-03-07
 :description: This script is used to process the audio files from the 3CX recordings bucket and convert them to text.
