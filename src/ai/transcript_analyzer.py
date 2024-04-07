@@ -4,7 +4,7 @@ import asyncio
 import json
 import openai
 import pandas as pd
-from gpt_3_fine_tuning.models import get_completion_async
+from src.ai.model_manager import get_completion_async
 
 
 async def process_row(row: dict, api_key: str) -> dict:

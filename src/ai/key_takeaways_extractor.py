@@ -1,4 +1,4 @@
-from gpt_3_fine_tuning.models import get_completion, get_embedding, semantic_search, get_completion_async, \
+from src.ai.model_manager import get_completion, get_embedding, semantic_search, get_completion_async, \
     get_embedding_async
 import pandas as pd
 import asyncio

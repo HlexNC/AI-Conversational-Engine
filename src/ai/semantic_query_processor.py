@@ -1,5 +1,5 @@
 import pandas as pd
-from gpt_3_fine_tuning.models import get_embedding, semantic_search
+from src.ai.model_manager import get_embedding, semantic_search
 
 
 def merge_dataframes(df1, df2):

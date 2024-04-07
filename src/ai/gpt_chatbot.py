@@ -1,5 +1,5 @@
-from gpt_3_fine_tuning.semantic_search import search_takeaways, merge_dataframes_3
-from gpt_3_fine_tuning.models import get_completion
+from src.ai.semantic_query_processor import search_takeaways, merge_dataframes_3
+from src.ai.model_manager import get_completion
 import pandas as pd
 
 
