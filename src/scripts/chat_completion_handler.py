@@ -1,7 +1,7 @@
 import os
 import openai
 import pandas as pd
-from gpt_3_fine_tuning.semantic_search import search_takeaways, merge_dataframes_3
+from src.ai.semantic_query_processor import search_takeaways, merge_dataframes_3
 from dotenv import load_dotenv
 
 messages_data = []
